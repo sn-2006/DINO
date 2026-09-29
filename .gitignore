@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+server/.env
+blockchain/.env
+.vercel/
+*.log
+*.dump
+.DS_Store
+.vercel
+.env*

@@ -1,0 +1,83 @@
+import "dotenv/config";
+
+import express from "express";
+import cors from "cors";
+
+import binanceRoutes from "./routes/binance.js";
+import walletRoutes from "./routes/wallet.js";
+import authRoutes from "./routes/auth.js";
+import caseRoutes from "./routes/cases.js";
+import verifyRoutes from "./routes/verify.js";
+import aiRoutes from "./routes/ai.js";
+import verificationRoutes from "./routes/verification.js";
+import profileRoutes from "./routes/profile.js";
+import complianceRoutes from "./routes/compliance.js";
+import auditorsRouter from "./routes/auditors.js";
+import auditorRequestsRouter from "./routes/auditorRequests.js";
+import auditorRequestActionsRouter from "./routes/auditorRequestActions.js";
+import conversationsRouter from "./routes/conversations.js";
+import notificationsRouter from "./routes/notifications.js";
+
+const app = express();
+
+// Enable CORS for all origins in development (automatically reflects request origin)
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
+app.options("*", cors());
+
+
+app.use(express.json({ limit: "50mb" }));
+
+const API_PREFIX = "/api";
+
+app.get(`${API_PREFIX}/health`, (req, res) => {
+  res.json({ ok: true });
+});
+
+app.use(`${API_PREFIX}/auth`, authRoutes);
+app.use(`${API_PREFIX}/cases`, caseRoutes);
+app.use(`${API_PREFIX}/verify`, verifyRoutes);
+app.use(`${API_PREFIX}/ai`, aiRoutes);
+app.use(`${API_PREFIX}/verification`, verificationRoutes);
+app.use(`${API_PREFIX}/profile`, profileRoutes);
+app.use(`${API_PREFIX}/compliance`, complianceRoutes);
+app.use(`${API_PREFIX}/binance`, binanceRoutes);
+app.use(`${API_PREFIX}/wallet`, walletRoutes);
+app.use(`${API_PREFIX}/auditors`, auditorsRouter);
+app.use(`${API_PREFIX}/auditor-requests`, auditorRequestsRouter);
+app.use(`${API_PREFIX}/auditor-requests`, auditorRequestActionsRouter);
+app.use(`${API_PREFIX}/conversations`, conversationsRouter);
+app.use(`${API_PREFIX}/notifications`, notificationsRouter);
+
+app.use((err, req, res, next) => {
+  console.error("SERVER ERROR:", err);
+
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({
+      error: "Request payload is too large.",
+    });
+  }
+
+  res.status(500).json({
+    error: err.message || "Unexpected server error.",
+  });
+});
+
+export default app;
+
+// Local development only.
+// Vercel imports the Express app as a serverless function
+// and provides its own HTTP listener.
+if (!process.env.VERCEL) {
+  const port = process.env.PORT || 4000;
+
+  app.listen(port, () => {
+    console.log(`T-REX API listening on http://localhost:${port}`);
+  });
+}
